@@ -1,290 +1,132 @@
 # 🚦 Traffic Chalan Automation System
 
-An end-to-end **AI-powered traffic violation detection and e-chalan automation system** that analyzes traffic images, identifies violations, detects and reads vehicle number plates, retrieves vehicle-owner information, calculates applicable fines, generates PDF e-chalans, and provides a WhatsApp notification link.
+An AI-powered system that detects traffic violations from images and automatically generates e-chalans with fine details and WhatsApp notifications.
 
-
-
-
-
-\
-
----
-
-## 📌 Overview
-
-Manual traffic-violation processing can involve multiple steps, including identifying the violation, reading the vehicle number plate, retrieving vehicle information, calculating fines, preparing documentation, and notifying the vehicle owner.
-
-The **Traffic Chalan Automation System** integrates these steps into a single automated pipeline.
-
-### Workflow
-
-1. 🖼️ Upload or provide a traffic image
-2. 🤖 Detect one or more traffic violations using a Vision LLM
-3. 💰 Retrieve applicable fines from PostgreSQL
-4. 🚘 Detect the vehicle number plate using computer vision
-5. 🔤 Read the number plate using Vision LLM-based OCR
-6. 👤 Identify the vehicle owner using database lookup and fuzzy matching
-7. 📄 Generate a professional PDF e-chalan
-8. 📱 Generate a WhatsApp notification link for manual sending
-
-The system supports **multiple violations in a single image**, such as *No Helmet + Triple Riding*.
+![Python](https://img.shields.io/badge/Python-3.10+-blue)
+![OpenCV](https://img.shields.io/badge/OpenCV-4.10-green)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-blue)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.39-red)
+![Groq](https://img.shields.io/badge/Groq-LLM-orange)
+![Azure](https://img.shields.io/badge/Azure-Container%20Apps-blue)
 
 ---
 
-## ✨ Key Features
+## 📌 What This Project Does
 
-* **Multi-Violation Detection**
-  Detects multiple traffic violations from a single image.
+When a traffic camera captures an image, this system:
 
-* **AI-Powered Vision Analysis**
-  Uses Groq Vision LLM for violation classification and number-plate OCR.
+1. Detects the traffic violation in the image (using Groq Vision LLM)
+2. Looks up the fine amount from a PostgreSQL database
+3. Detects and reads the vehicle's number plate (OpenCV + LLM OCR)
+4. Finds the vehicle owner from the database
+5. Generates a PDF e-chalan
+6. Creates a WhatsApp notification link
 
-* **Three-Layer Number Plate Detection**
-  Combines Canny edge detection, Haar Cascade classification, and full-image fallback.
-
-* **OCR Error Tolerance**
-  Uses fuzzy string matching to handle common OCR character errors such as `R ↔ K` and `0 ↔ O`.
-
-* **Automated Fine Calculation**
-  Retrieves violation-specific fines from PostgreSQL and calculates the total amount.
-
-* **Vehicle Owner Lookup**
-  Searches vehicle records and performs fuzzy matching when OCR results are imperfect.
-
-* **PDF E-Chalan Generation**
-  Automatically generates a structured, professional PDF document using ReportLab.
-
-* **WhatsApp Notification**
-  Creates a `wa.me` link containing the relevant notification information for manual sending.
-
-* **Streamlit Web Interface**
-  Provides a simple interface for uploading images and viewing analysis results.
-
-* **CLI Support**
-  Allows the complete pipeline to be executed directly from the terminal.
-
-* **Structured Logging**
-  Maintains console and file-based logs for debugging and traceability.
+Supports **multiple violations in a single image** (e.g., No Helmet + Triple Ride).
 
 ---
 
-## 🏗️ System Architecture
+## ✨ Features
 
-```text
-                    ┌─────────────────────────┐
-                    │    Traffic Image        │
-                    └────────────┬────────────┘
-                                 │
-                                 ▼
-              ┌────────────────────────────────────┐
-              │       Groq Vision LLM              │
-              │      Multi-Violation Detection     │
-              └──────────────────┬─────────────────┘
-                                 │
-                                 ▼
-                   ┌────────────────────────┐
-                   │ Detected Violations    │
-                   │ • No Helmet            │
-                   │ • Triple Ride          │
-                   └────────────┬───────────┘
-                                │
-                                ▼
-              ┌────────────────────────────────────┐
-              │       PostgreSQL: chalan_db        │
-              │         Fine Lookup & Rules         │
-              └──────────────────┬─────────────────┘
-                                 │
-                                 ▼
-                    ┌────────────────────────┐
-                    │ Fine Breakdown + Total │
-                    └────────────┬───────────┘
-                                 │
-                 ┌───────────────┴────────────────┐
-                 │                                │
-                 ▼                                ▼
-      ┌──────────────────────┐        ┌──────────────────────┐
-      │ OpenCV Plate Detector│        │ Groq Vision LLM      │
-      │ Canny + Haar Cascade │───────▶│ Number Plate OCR     │
-      └──────────┬───────────┘        └──────────┬───────────┘
-                 │                               │
-                 └──────────────┬────────────────┘
-                                ▼
-                    ┌────────────────────────┐
-                    │    Vehicle Number      │
-                    └────────────┬───────────┘
-                                 │
-                                 ▼
-              ┌────────────────────────────────────┐
-              │       PostgreSQL: user_db          │
-              │    Owner Lookup + Fuzzy Matching   │
-              └──────────────────┬─────────────────┘
-                                 │
-                                 ▼
-                    ┌────────────────────────┐
-                    │ Owner Name + Mobile    │
-                    └────────────┬───────────┘
-                                 │
-                    ┌────────────┴────────────┐
-                    │                         │
-                    ▼                         ▼
-          ┌───────────────────┐     ┌────────────────────┐
-          │ PDF E-Chalan      │     │ WhatsApp Link      │
-          │     ReportLab     │     │     wa.me          │
-          └───────────────────┘     └────────────────────┘
-```
+- Detects multiple traffic violations per image
+- Number plate detection using Canny edges + Haar cascade
+- Fallback to full-image OCR when the plate crop fails
+- Fuzzy plate matching to handle small OCR errors (R↔K, 0↔O)
+- PDF e-chalan with violation-wise fine breakdown
+- WhatsApp notification link for manual sending
+- Streamlit web UI + CLI mode
+- PostgreSQL backend (two separate databases)
+- Structured logging to console and file
+- Dockerized and deployed on Azure Container Apps
 
 ---
 
-## 🛠️ Technology Stack
+## 🛠️ Tech Stack
 
-| Component            | Technology               |
-| -------------------- | ------------------------ |
-| Programming Language | Python 3.10+             |
-| Computer Vision      | OpenCV                   |
-| Edge Detection       | Canny                    |
-| Object Detection     | Haar Cascade             |
-| AI / Vision LLM      | Groq API                 |
-| LLM Model            | `qwen/qwen3.8-27b`       |
-| Database             | PostgreSQL 15+           |
-| PDF Generation       | ReportLab                |
-| Web Interface        | Streamlit                |
-| Notification         | WhatsApp `wa.me`         |
-| Configuration        | YAML + `python-dotenv`   |
-| Logging              | Python `logging`         |
-| Fuzzy Matching       | Python `SequenceMatcher` |
+| Component | Technology |
+|---|---|
+| Language | Python 3.10+ |
+| Computer Vision | OpenCV |
+| LLM / OCR | Groq API (Qwen 3.8) |
+| Database | PostgreSQL |
+| PDF | ReportLab |
+| Web UI | Streamlit |
+| Config | YAML + python-dotenv |
+| Containerization | Docker |
+| Deployment | Azure Container Apps |
 
 ---
 
 ## 📁 Project Structure
 
-```text
+```
 traffic-chalan-automation/
-│
-├── app.py                         # Streamlit application
-├── main.py                        # CLI entry point
-├── config.yaml                    # Application configuration
-├── requirements.txt               # Python dependencies
-├── .env.example                   # Environment variable template
-├── .gitignore                     # Git ignore rules
+├── app.py                  # Streamlit UI
+├── main.py                 # CLI entry point
+├── config.yaml             # Settings
+├── chalan_db.sql           # Database schema (chalan_db)
+├── user_db.sql             # Database schema (user_db)
+├── Dockerfile
+├── requirements.txt
+├── .env.example
+├── .dockerignore
+├── .gitignore
 │
 ├── src/
-│   ├── vision/
-│   │   ├── plate_detector.py      # Number plate detection
-│   │   └── image_utils.py         # Image processing utilities
-│   │
-│   ├── llm/
-│   │   ├── client.py              # Groq API client
-│   │   ├── violation_detector.py  # Traffic violation detection
-│   │   └── plate_reader.py        # Number plate OCR
-│   │
-│   ├── database/
-│   │   ├── connection.py          # PostgreSQL connection
-│   │   ├── chalan_repo.py         # Chalan database operations
-│   │   └── user_repo.py           # Vehicle/owner lookup
-│   │
-│   ├── chalan/
-│   │   ├── fine_calculator.py     # Fine calculation
-│   │   └── pdf_generator.py       # PDF e-chalan generation
-│   │
-│   ├── notification/
-│   │   └── whatsapp_web.py        # WhatsApp notification link
-│   │
-│   ├── pipeline/
-│   │   └── runner.py              # End-to-end pipeline
-│   │
-│   └── utils/
-│       ├── config_loader.py       # Configuration loader
-│       └── logger.py              # Logging configuration
+│   ├── vision/              # Plate detection (OpenCV)
+│   ├── llm/                 # Groq LLM calls
+│   ├── database/             # PostgreSQL repos
+│   ├── chalan/               # Fine + PDF
+│   ├── notification/         # WhatsApp link
+│   ├── pipeline/              # Orchestrator
+│   └── utils/                # Config + logger
 │
-├── models/
-│   └── *.xml                      # Haar Cascade model files
-│
-├── data/
-│   ├── input/                     # Input traffic images
-│   ├── output/                    # Processing output
-│   └── chalan_pdfs/               # Generated e-chalans
-│
-├── tests/                         # Unit tests
-│
-└── logs/                          # Application log files
+├── models/                 # Haar cascade XML
+├── data/                    # input/output/PDFs
+├── docs/                    # Screenshots
+├── tests/
+└── logs/
 ```
 
 ---
 
-# 🚀 Getting Started
+## 🚀 Setup (Local)
 
-## Prerequisites
-
-Before running the project, make sure you have:
-
-* Python **3.10 or higher**
-* PostgreSQL **15 or higher**
-* A Groq API key
-* Git
-* A Windows/Linux/macOS environment
-
----
-
-## 1. Clone the Repository
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/traffic-chalan-automation.git
 cd traffic-chalan-automation
 ```
 
----
-
-## 2. Create a Virtual Environment
-
-### Windows
+### 2. Create a virtual environment
 
 ```bash
 python -m venv venv
-venv\Scripts\activate
+venv\Scripts\activate         # Windows
+# source venv/bin/activate    # Linux/Mac
 ```
 
-### Linux / macOS
-
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-
----
-
-## 3. Install Dependencies
+### 3. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
----
-
-## 4. Configure Environment Variables
-
-Create a `.env` file from the provided example:
-
-### Windows
+### 4. Set up the environment file
 
 ```bash
-copy .env.example .env
+copy .env.example .env        # Windows
+# cp .env.example .env        # Linux/Mac
 ```
 
-### Linux / macOS
-
-```bash
-cp .env.example .env
-```
-
-Update the `.env` file with your configuration:
+Edit `.env`:
 
 ```env
 DB_HOST=localhost
 DB_PORT=5432
-
 CHALAN_DB_NAME=chalan_db
 USER_DB_NAME=user_db
-
 DB_USER=postgres
 DB_PASSWORD=your_password
 
@@ -292,414 +134,260 @@ GROQ_API_KEY=your_groq_api_key
 GROQ_VISION_MODEL=qwen/qwen3.8-27b
 ```
 
-> ⚠️ **Security:** Never commit your `.env` file or API keys to GitHub.
+Get a free Groq API key: [console.groq.com/keys](https://console.groq.com/keys)
 
-You can obtain a Groq API key from the [Groq Console](https://console.groq.com/keys).
-
----
-
-## 5. Set Up PostgreSQL
-
-Create the required databases:
+### 5. Set up PostgreSQL
 
 ```bash
 createdb chalan_db
 createdb user_db
+
+psql -U postgres -d chalan_db -f chalan_db.sql
+psql -U postgres -d user_db -f user_db.sql
 ```
-
-Alternatively, create them using **pgAdmin** or the PostgreSQL command-line interface.
-
-Run the database schema scripts provided in:
-
-```text
-src/database/schema.sql
-```
-
-The two-database design separates:
-
-* **`chalan_db`** — violation and fine-related information
-* **`user_db`** — vehicle-owner information
 
 ---
 
-# 🎮 Usage
+## 🎮 Usage
 
-## Streamlit Web Application
-
-Start the Streamlit application:
+### Streamlit UI
 
 ```bash
 streamlit run app.py
 ```
 
-Open the application in your browser:
+Open `http://localhost:8501`, upload an image, click **Analyze & Generate Chalan**.
 
-```text
-http://localhost:8501
-```
-
-Upload a traffic image and click **Analyze** to start the automated processing pipeline.
-
----
-
-## Command-Line Interface
-
-The system can also be executed directly from the terminal:
+### CLI
 
 ```bash
 python main.py data/input/test3.jpg
 ```
 
-The CLI processes the image and displays the detected violations, fine details, vehicle information, generated PDF path, and WhatsApp notification link.
+Example output:
 
----
-
-# 📊 Example Output
-
-```text
+```
 ============================================================
 RESULT
 ============================================================
-
 Violations  : No Helmet, Triple Ride
-
 Fine breakdown:
-  • No Helmet   : Rs. 200
-  • Triple Ride : Rs. 1000
-  -------------------------
-  TOTAL         : Rs. 1200
-
-Plate       : MH01AB1234
-Owner       : Deepak Yadav
+  • No Helmet: Rs. 200
+  • Triple Ride: Rs. 1000
+  ---------------------
+  TOTAL: Rs. 1200
+Plate       : MH12AB3456
+Owner       : Vikram Singh
 Mobile      : 7684051736
-
-PDF         : data/chalan_pdfs/chalan_MH01AB1234_xxx.pdf
+PDF         : data/chalan_pdfs/chalan_MH12AB3456_xxx.pdf
 WhatsApp    : https://wa.me/...
-
 ============================================================
 ```
-
----
-
-# 🔍 Number Plate Detection Pipeline
-
-The system uses a **three-layer fallback strategy** to improve number-plate detection reliability.
-
-### Layer 1 — Canny Edge Detection
-
-The system first identifies potential plate regions using:
-
-* Grayscale conversion
-* Canny edge detection
-* Contour analysis
-* Aspect-ratio filtering
-
-### Layer 2 — Haar Cascade
-
-If the primary detection method does not produce a suitable plate region, the system uses a Haar Cascade classifier as a fallback.
-
-### Layer 3 — Vision LLM OCR
-
-If traditional computer-vision methods fail or produce an unreadable crop, the full image is sent to the Vision LLM for number-plate recognition.
-
-```text
-Traffic Image
-     │
-     ▼
-Canny + Contour Detection
-     │
-     ├── Plate Found ──────► OCR
-     │
-     └── Plate Not Found
-              │
-              ▼
-       Haar Cascade
-              │
-              ├── Plate Found ──────► OCR
-              │
-              └── Plate Not Found
-                       │
-                       ▼
-                Full Image → LLM OCR
-```
-
-If the LLM returns `UNREADABLE`, the system automatically retries using the full image.
-
----
-
-# 🧠 Design Decisions
-
-## 1. Separate PostgreSQL Databases
-
-The project uses two databases:
-
-```text
-chalan_db
-    └── Violations + Fine Information
-
-user_db
-    └── Vehicle + Owner Information
-```
-
-This separation provides a logical boundary between violation-related information and personally identifiable information.
-
----
-
-## 2. Vision LLM for Violation Detection and OCR
-
-Instead of maintaining separate models for violation classification and OCR, the system uses a Vision LLM for both tasks.
-
-This simplifies the architecture while allowing the system to process different traffic-image scenarios.
-
----
-
-## 3. Fuzzy Number-Plate Matching
-
-OCR can produce character-level errors.
-
-For example:
-
-```text
-Actual : MH01AB1234
-OCR    : MH01AB12B4
-```
-
-The system uses fuzzy string matching with an **80% similarity threshold** to improve vehicle-record matching despite minor OCR errors.
-
----
-
-## 4. WhatsApp `wa.me` Notification
-
-Instead of integrating a third-party WhatsApp messaging API, the system generates a WhatsApp URL that allows the notification to be sent manually.
-
-This keeps the notification workflow simple and avoids requiring automated messaging infrastructure.
-
----
-
-## 5. Structured Logging
-
-The application uses Python's `logging` framework to maintain application logs.
-
-Logs can help with:
-
-* Debugging
-* Monitoring pipeline execution
-* Identifying API/database failures
-* Tracking processing steps
-* Troubleshooting OCR and detection issues
-
----
-
-# 🔄 End-to-End Processing Flow
-
-```text
-Image Upload
-     │
-     ▼
-Violation Detection
-     │
-     ▼
-Multiple Violations
-     │
-     ▼
-Fine Lookup
-     │
-     ▼
-Fine Calculation
-     │
-     ▼
-Number Plate Detection
-     │
-     ▼
-Number Plate OCR
-     │
-     ▼
-Vehicle Database Lookup
-     │
-     ▼
-Fuzzy Matching
-     │
-     ▼
-Owner Information
-     │
-     ├───────────────┐
-     ▼               ▼
-PDF E-Chalan    WhatsApp Link
-```
-
----
-
-# 🧪 Testing
-
-Unit tests are maintained inside the:
-
-```text
-tests/
-```
-
-directory.
-
-Run the test suite using:
-
-```bash
-pytest
-```
-
-For more detailed output:
-
-```bash
-pytest -v
-```
-
----
-
-# 🔐 Security Considerations
-
-The project handles sensitive information such as vehicle-owner details and API credentials.
-
-Recommended practices:
-
-* Never commit `.env` files.
-* Never expose API keys in source code.
-* Use `.env.example` for configuration templates.
-* Restrict database credentials to the required permissions.
-* Avoid exposing personally identifiable information in logs.
-* Do not upload real-world vehicle-owner data to public repositories.
-* Use synthetic or anonymized data for demonstrations and testing.
-
----
-
-# ⚠️ Important Notes
-
-This project is intended primarily for **educational, research, and portfolio purposes**.
-
-The accuracy of AI-based traffic-violation detection and number-plate recognition can vary depending on:
-
-* Image quality
-* Lighting conditions
-* Camera angle
-* Plate visibility
-* Occlusion
-* Traffic density
-* LLM/OCR performance
-
-For real-world deployment, AI-generated results should be validated against applicable traffic laws, official vehicle databases, and authorized enforcement procedures.
-
----
-
-# 🚧 Future Enhancements
-
-Potential future improvements include:
-
-* [ ] Real-time CCTV/video stream processing
-* [ ] Automatic violation evidence cropping
-* [ ] Additional traffic violation categories
-* [ ] Advanced ANPR models
-* [ ] Real-time dashboard and analytics
-* [ ] Authentication and role-based access control
-* [ ] Cloud deployment
-* [ ] REST API integration
-* [ ] Automated notification service
-* [ ] Database administration dashboard
-* [ ] Improved OCR using specialized ANPR models
-* [ ] Docker containerization
-* [ ] Automated CI/CD pipeline
-
----
-
-# 📸 Demo
 
 ---
 
 ## 🎬 Demo
 
-### Streamlit UI
-
-![Streamlit Demo](docs/demo_streamlit.png)
-
-Upload an image, click **Analyze**, and get the full chalan preview —
-including detected violations, total fine, owner details, PDF download,
-and WhatsApp link.
-
-### CLI Output
-
-![CLI Demo](docs/demo_cli.png)
-
-
-### Generated PDF Chalan
-
-![PDF Demo](docs/demo_pdf.png)
-
-Each e-chalan is a professionally formatted PDF with a breakdown of
-all detected violations and the total fine.
-### Generated PDF Chalan
-
-![PDF Demo](docs/demo_pdf.png)
-
-Each e-chalan is a professionally formatted PDF with a breakdown of
-all detected violations and the total fine.
-
-
-Recommended screenshots:
-
-```text
-docs/
-├── dashboard.png
-├── violation-detection.png
-├── plate-detection.png
-├── fine-calculation.png
-└── generated-chalan.png
-```
-
-Example:
-
-```markdown
-![Traffic Chalan Dashboard](docs/dashboard.png)
-```
+| Streamlit UI | CLI Output | Generated PDF |
+|---|---|---|
+| ![Streamlit UI](docs/demo_streamlit.png) | ![CLI Output](docs/demo_cli.png) | ![Generated PDF](docs/demo_pdf.png) |
 
 ---
 
-# 🤝 Contributing
+## 🔍 How Plate Detection Works
 
-Contributions, suggestions, and improvements are welcome.
+The system uses a 3-layer fallback:
 
-### Steps
+1. **Canny edge detection + contour analysis** — tries to find the plate first
+2. **Haar cascade classifier** — used if the first method fails
+3. **Full image sent to LLM** — if the crop still fails or returns `UNREADABLE`
 
-1. Fork the repository
-2. Create a feature branch
-
-```bash
-git checkout -b feature/your-feature
-```
-
-3. Commit your changes
-
-```bash
-git commit -m "Add your feature"
-```
-
-4. Push the branch
-
-```bash
-git push origin feature/your-feature
-```
-
-5. Open a Pull Request
-
+This makes it work on real-world images where the crop isn't always perfect.
 
 ---
 
-# 👨‍💻 Author
+## ☁️ Azure Deployment
 
-## Sachin Sakti Ranjan
+The app is containerized with Docker and deployed on **Azure Container Apps**.
 
-**MCA Graduate | Aspiring Software Engineer | Python & Java Developer | Full-Stack & AI Enthusiast**
+### Architecture
 
-* **GitHub:** [Sachins179](https://github.com/Sachins179)
-* **LinkedIn:** [Sachin Sakti Ranjan on LinkedIn](www.linkedin.com/in/sachin-sakti-ranjan-78a8bb268)
+```
+┌─────────────────────────────┐      ┌──────────────────────────────┐
+│  Azure Container Registry   │      │  Azure Database for          │
+│  (ACR)                      │      │  PostgreSQL Flexible Server  │
+│  trafficchalanregsachin     │      │  traffic-chalan-db-sachin    │
+│                             │      │                              │
+│  image: chalan-app:v1       │◄─────┤  Databases:                  │
+└──────────────┬──────────────┘      │   - chalan_db                │
+               │ pulls image         │   - user_db                  │
+               ▼                     └──────────────────────────────┘
+┌──────────────────────────┐
+│  Azure Container App     │
+│  traffic-chalan-app      │
+│  (Streamlit, port 8501)  │
+│  Public HTTPS URL        │
+└──────────────────────────┘
+```
+
+### Resources created
+
+| Resource | Name | Region |
+|---|---|---|
+| Resource Group | `traffic-chalan-rg` | Central India |
+| Database Server | `traffic-chalan-db-sachin` | Central India |
+| Container Registry | `trafficchalanregsachin` | Central India |
+| Container App | `traffic-chalan-app` | Central India |
+
+### 1. Dockerfile
+
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libglib2.0-0 curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+RUN mkdir -p data/input data/output data/chalan_pdfs logs
+
+EXPOSE 8501
+
+CMD ["streamlit", "run", "app.py", \
+     "--server.port=8501", \
+     "--server.address=0.0.0.0", \
+     "--server.headless=true", \
+     "--server.enableCORS=false"]
+```
+
+**Notes:**
+- `opencv-python-headless` is used instead of `opencv-python` to avoid `libGL.so.1` errors in a headless container.
+- `.env` is excluded from the image via `.dockerignore` — secrets are injected at runtime through Container App environment variables instead.
+
+### 2. Database setup
+
+Two PostgreSQL databases run on one Flexible Server:
+
+- **`chalan_db`** — tables: `violations`, `chalan_log`
+- **`user_db`** — table: `users`
+
+**Local → Azure migration:**
+
+```cmd
+:: 1. Backup local databases
+"C:\Program Files\PostgreSQL\18\bin\pg_dump.exe" -h localhost -U postgres -d chalan_db --no-owner --no-acl -f chalan_db.sql
+"C:\Program Files\PostgreSQL\18\bin\pg_dump.exe" -h localhost -U postgres -d user_db --no-owner --no-acl -f user_db.sql
+
+:: 2. Restore into Azure (SSL required)
+set PGSSLMODE=require
+"C:\Program Files\PostgreSQL\18\bin\psql.exe" -h traffic-chalan-db-sachin.postgres.database.azure.com -U chalanadmin -d chalan_db -f chalan_db.sql
+"C:\Program Files\PostgreSQL\18\bin\psql.exe" -h traffic-chalan-db-sachin.postgres.database.azure.com -U chalanadmin -d user_db -f user_db.sql
+```
+
+**Networking:**
+- Public access: Enabled
+- Firewall rule: *Allow public access from any Azure service within Azure*
+- Developer machine IP was added temporarily during migration and removed afterward.
+
+**SSL (required):** Azure PostgreSQL rejects non-SSL connections. `src/database/connection.py`:
+
+```python
+def _connect(dbname: str):
+    env = config.env
+    return psycopg2.connect(
+        host=env["DB_HOST"],
+        port=env["DB_PORT"],
+        dbname=dbname,
+        user=env["DB_USER"],
+        password=env["DB_PASSWORD"],
+        sslmode=os.getenv("DB_SSLMODE", "prefer"),  # "require" on Azure
+        connect_timeout=10,
+        cursor_factory=psycopg2.extras.RealDictCursor,
+    )
+```
+
+### 3. Build and push the image
+
+```cmd
+az login
+docker login trafficchalanregsachin.azurecr.io
+
+docker build -t chalan-app .
+docker tag chalan-app trafficchalanregsachin.azurecr.io/chalan-app:v1
+docker push trafficchalanregsachin.azurecr.io/chalan-app:v1
+```
+
+### 4. Container App configuration
+
+| Setting | Value |
+|---|---|
+| Image source | Azure Container Registry |
+| Registry / Image / Tag | `trafficchalanregsachin.azurecr.io` / `chalan-app` / `v1` |
+| CPU / Memory | 1 core / 2 Gi |
+| Ingress | Enabled, accepting traffic from anywhere |
+| Ingress type | HTTP |
+| Target port | `8501` |
+| Insecure connections | Not allowed (HTTPS only) |
+
+**Environment variables:**
+
+| Name | Value |
+|---|---|
+| `DB_HOST` | `traffic-chalan-db-sachin.postgres.database.azure.com` |
+| `DB_PORT` | `5432` |
+| `DB_USER` | `chalanadmin` |
+| `DB_PASSWORD` | *(secret)* |
+| `CHALAN_DB_NAME` | `chalan_db` |
+| `USER_DB_NAME` | `user_db` |
+| `DB_SSLMODE` | `require` |
+| `GROQ_API_KEY` | *(secret)* |
+| `GROQ_VISION_MODEL` | `qwen/qwen3.8-27b` |
+
+### 5. Post-deployment checklist
+
+- [ ] Open the Application URL from the Container App's Overview page.
+- [ ] Upload a test image and confirm the full pipeline runs.
+- [ ] Move `DB_PASSWORD` and `GROQ_API_KEY` into **Settings → Secrets**.
+- [ ] Enable **Settings → Authentication** — the URL is public and exposes owner names/mobile numbers.
+- [ ] Remove the temporary developer-IP firewall rule from the PostgreSQL server.
+- [ ] Note: `data/chalan_pdfs` and `logs/` are ephemeral in the container — PDFs are lost on restart. Add Azure Blob Storage if PDFs need to persist.
+
+### 6. Useful commands
+
+```cmd
+:: View live logs
+az containerapp logs show --name traffic-chalan-app --resource-group traffic-chalan-rg --follow
+
+:: Deploy a new version
+docker build -t chalan-app .
+docker tag chalan-app trafficchalanregsachin.azurecr.io/chalan-app:v2
+docker push trafficchalanregsachin.azurecr.io/chalan-app:v2
+az containerapp update --name traffic-chalan-app --resource-group traffic-chalan-rg --image trafficchalanregsachin.azurecr.io/chalan-app:v2
+
+:: Tear down everything (stop billing)
+az group delete --name traffic-chalan-rg
+```
+
+## 🧠 Notes
+
+- Two PostgreSQL databases keep violation data and user data separate
+- Fuzzy matching handles small OCR errors (e.g., `TS09EA4322` → `TS09EA4321`)
+- The vision LLM is used twice — violation detection + plate OCR
+- WhatsApp messages are sent manually via a generated `wa.me` link
+- Docker uses `opencv-python-headless` (regular `opencv-python` fails in containers)
+- `tornado==6.4.1` is pinned to fix a Streamlit 1.39 file-upload issue
 
 ---
 
-## ⭐ Support
+## 👤 Author
 
-If you find this project useful for learning or research, consider giving the repository a ⭐ on GitHub.
+**Your Name**
+
+- GitHub: [Sachins179](https://github.com/Sachins179)
+- LinkedIn: [Sachin Sakti Ranjan on LinkedIn](www.linkedin.com/in/sachin-sakti-ranjan-78a8bb268)
