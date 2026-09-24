@@ -1,0 +1,27 @@
+# Environment
+.env
+
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# Runtime data
+data/input/*
+data/output/*
+data/chalan_pdfs/*
+logs/*
+
+# Keep folders (but not contents)
+!data/input/.gitkeep
+!data/output/.gitkeep
+!data/chalan_pdfs/.gitkeep
+!logs/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,38 @@
+app:
+  name: "Traffic Chalan Automation"
+  version: "1.0.0"
+  log_level: "INFO"
+
+paths:
+  data_dir: "data"
+  input_dir: "data/input"
+  output_dir: "data/output"
+  pdfs_dir: "data/chalan_pdfs"
+  models_dir: "models"
+  plate_cascade: "models/haarcascade_russian_plate_number.xml"
+
+database:
+  host: "localhost"
+  port: 5432
+  chalan_db: "chalan_db"
+  user_db: "user_db"
+  user: "postgres"
+
+llm:
+  vision_model: "qwen/qwen3.8-27b"
+  max_tokens_violation: 200
+  max_tokens_plate: 50
+  temperature: 0.0
+
+plate_detection:
+  fuzzy_threshold: 0.80
+  aspect_ratio_min: 2.0
+  aspect_ratio_max: 5.5
+  min_width: 60
+  min_height: 15
+
+violations:
+  No Helmet: 200
+  Triple Ride: 1000
+  No Parking: 100
+  Overspeed: 1000
